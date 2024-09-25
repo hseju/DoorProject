@@ -1,0 +1,100 @@
+/* Body Styling */
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f0f0f5;
+    margin: 0;
+    padding: 20px;
+    line-height: 1.6;
+}
+
+.layout-img {
+    width: 50px; /* Set appropriate width for the layout image */
+    height: 50px;
+    margin-left: 10px;
+    vertical-align: middle;
+}
+
+
+/* Container Styling */
+.container {
+    max-width: 900px;
+    margin: auto;
+    padding: 25px;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    border: 1px solid #ddd;
+}
+
+/* Headings */
+h1 {
+    text-align: center;
+    color: #333;
+    font-size: 2em;
+    margin-bottom: 20px;
+}
+
+/* Canvas Styling */
+canvas {
+    border: 2px solid #ccc;
+    border-radius: 5px;
+    display: block;
+    margin: 25px auto;
+    max-width: 100%; /* Ensure responsiveness */
+}
+
+/* Form Question Styling */
+.question {
+    margin: 20px 0;
+    font-size: 1.1em;
+}
+
+/* Buttons */
+.button {
+    display: inline-block;
+    margin: 25px auto;
+    padding: 12px 25px;
+    background-color: #28a745;  /* Green color for the button */
+    color: #fff;  /* White text color */
+    border: none;  /* Remove default border */
+    border-radius: 6px;  /* Smooth rounded corners */
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    text-align: center;
+    transition: background-color 0.3s ease;  /* Smooth hover effect */
+}
+
+.button:hover {
+    background-color: #218838;  /* Slightly darker green on hover */
+}
+
+/* Input Fields */
+input[type="number"], select {
+    width: 100%;
+    padding: 10px;
+    margin-top: 8px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 1em;
+}
+
+/* Media Query for Responsiveness */
+@media (max-width: 600px) {
+    .container {
+        padding: 15px;
+    }
+
+    h1 {
+        font-size: 1.8em;
+    }
+
+    .button {
+        padding: 10px 20px;
+        font-size: 14px;
+    }
+
+    canvas {
+        max-width: 100%;
+    }
+}

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Porch Visualization Tool</title>
+    <link rel="stylesheet" href="styles.css">
+    
+    
+</head>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.10/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.13/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+
+<body>
+    <div class="container">
+        <h1>Porch Visualization Tool</h1>
+
+        <!-- Placeholder for the selected layout message -->
+        <h2 id="selectedLayoutHeading" style="display: none; margin-top: 10px;">Layout selected</h2>
+
+        <div class="question" id="layoutSelection">
+            <label>Select a layout:</label><br>
+        
+            <input type="radio" id="layoutA" name="layout" value="layoutA" onclick="selectLayout('layoutA')">
+            <label for="layoutA">A</label>
+            <img src="images/layoutA.png" alt="Layout A" width="150" height="150" style="border:1px solid black;">
+        
+            <input type="radio" id="layoutB" name="layout" value="layoutB" onclick="selectLayout('layoutB')">
+            <label for="layoutB">B</label>
+            <img src="images/layoutB.png" alt="Layout B" width="150" height="150" style="border:1px solid black;">
+        
+            <input type="radio" id="layoutC" name="layout" value="layoutC" onclick="selectLayout('layoutC')">
+            <label for="layoutC">C</label>
+            <img src="images/layoutC.png" alt="Layout C" width="150" height="150" style="border:1px solid black;">
+        
+            <input type="radio" id="layoutD" name="layout" value="layoutD" onclick="selectLayout('layoutD')">
+            <label for="layoutD">D</label>
+            <img src="images/layoutD.png" alt="Layout D" width="150" height="150" style="border:1px solid black;"><br>
+        
+            <input type="radio" id="layoutNone" name="layout" value="none" onclick="selectLayout('none')">
+            <label for="layoutNone">None of the above</label>
+        </div>
+        
+        
+
+        <!-- Button to reset layout selection -->
+        <button id="resetSelectionButton" onclick="resetSelection()" style="display: none;">Change Selection</button>
+        
+        <!-- Input Questions -->
+        <div id="questions">
+            <div class="question">
+                <label for="width">Width of the porch (in inches):</label>
+                <input type="number" id="width" required>
+            </div>
+
+            <div class="question">
+                <label for="height">Height of the porch (in inches):</label>
+                <input type="number" id="height" required>
+            </div>
+
+            <div class="question">
+                <label for="door">Do you want a door?</label>
+                <select id="door" onchange="toggleDoorOptions()">
+                    <option value="no">No</option>
+                    <option value="yes">Yes</option>
+                </select>
+                <!-- Error message for door height validation -->
+                <p id="doorHeightError" style="color: red; display: none; margin-top: 5px;">Error: The standard door height requires the porch height to be greater than 80 inches.</p>
+            </div>
+
+            <!-- Door Position -->
+            <div class="question" id="doorPositionContainer" style="display:none;">
+                <label for="doorPosition">Distance of the door from the left pillar (in inches):</label>
+                <input type="number" id="doorPosition">
+            </div>
+
+            <!-- Door Size Selection (with radio buttons) -->
+            <div class="question" id="doorSizeContainer" style="display:none;">
+                <label>Select Door Size:</label><br>
+                <input type="radio" id="doorSize80x32" name="doorSize" value="80x32">
+                <label for="doorSize80x32">80x32 inches</label><br>
+                <input type="radio" id="doorSize80x34" name="doorSize" value="80x34">
+                <label for="doorSize80x34">80x34 inches</label><br>
+                <input type="radio" id="doorSize80x36" name="doorSize" value="80x36">
+                <label for="doorSize80x36">80x36 inches</label><br>
+            </div>
+
+            <!-- Submit button to trigger visualization -->
+            <!-- <button onclick="showDoorPosition()">Next</button> -->
+        </div>
+
+        <!-- Canvas for visualization -->
+        <!-- <button class="button" onclick="visualize()">Visualize</button>  -->
+        <button class="button" onclick="generateQuote()">Generate Quote</button>
+       
+
+
+
+        <canvas id="visualization" width="1000" height="800" style="border:1px solid black; display:none;"></canvas>
+        
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
