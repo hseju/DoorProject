@@ -24,6 +24,14 @@ function toggleDoorOptions() {
         // Show the door options if the height is valid
         doorPositionContainer.style.display = 'block';
         doorSizeContainer.style.display = 'block';
+
+
+        // Show the transom width question if the height is greater than 80 inches
+        if (height > 80) {
+            transomWidthContainer.style.display = 'block';
+        }
+
+
     } else {
         doorPositionContainer.style.display = 'none';
         doorSizeContainer.style.display = 'none';
@@ -50,6 +58,28 @@ function selectLayout(selectedLayout) {
     const radios = layoutSelection.querySelectorAll('input[type="radio"]');
     const labels = layoutSelection.querySelectorAll('label');
     const images = layoutSelection.querySelectorAll('img');
+    const questions = document.getElementById('questions');
+    const contactSection = document.getElementById('contactSection');
+    const resetSelectionButton = document.getElementById('resetSelectionButton');
+    const selectedLayoutHeading = document.getElementById('selectedLayoutHeading');
+    const generateQuoteButton = document.getElementById('generateQuoteButton');
+
+    // Check if the selected layout is "None of the above"
+    if (selectedLayout === 'none') {
+        // Hide all questions and visualization sections
+        questions.style.display = 'none';
+        contactSection.style.display = 'block'; // Show contact message and form
+        selectedLayoutHeading.style.display = 'none'; // Hide "Layout selected" heading
+        resetSelectionButton.style.display = 'none'; // Hide the reset button
+        generateQuoteButton.style.display = 'none'; // Hide the Generate Quote button
+    } else {
+        // Show the input questions if any other layout is selected
+        questions.style.display = 'block';
+        contactSection.style.display = 'none'; // Hide contact section
+        selectedLayoutHeading.style.display = 'block'; // Show "Layout selected" heading
+        resetSelectionButton.style.display = 'block'; // Show the reset button
+        generateQuoteButton.style.display = 'block'; // Show the Generate Quote button
+    }
 
     radios.forEach(radio => {
         if (radio.value !== selectedLayout) {
@@ -71,12 +101,13 @@ function selectLayout(selectedLayout) {
         }
     });
 
-    // Show the reset button
-    document.getElementById('resetSelectionButton').style.display = 'block';
-
-    // Show the "Layout selected" heading
-    document.getElementById('selectedLayoutHeading').style.display = 'block';
+    // Show the reset button to change the layout selection
+    resetSelectionButton.style.display = 'block';
 }
+
+
+
+
 
 // Function to reset the layout selection and show all options again
 function resetSelection() {
@@ -106,16 +137,15 @@ function resetSelection() {
 
 
 
-
 // Function to handle the visualization
 function visualize() {
-    const width = parseFloat(document.getElementById('width').value);
-    const height = parseFloat(document.getElementById('height').value);
+    const width = parseFloat(document.getElementById('width').value) || 0;
+    const height = parseFloat(document.getElementById('height').value) || 0;
     const door = document.getElementById('door').value;
     const doorPosition = parseFloat(document.getElementById('doorPosition').value) || 0;
     const selectedDoorSize = document.querySelector('input[name="doorSize"]:checked');
+    const transomWidth = document.getElementById('transomWidth') ? document.getElementById('transomWidth').value : 'no';
 
-    // Check if width and height are valid before drawing
     if (!width || !height) {
         // Do not draw if width or height is not valid
         return;
@@ -139,42 +169,33 @@ function visualize() {
     const scaleY = fixedCanvasHeight / height;
     const scaleFactor = Math.min(scaleX, scaleY); // Maintain aspect ratio
 
-    // Draw the porch outline
+    // Draw the porch outline with tags
     ctx.strokeStyle = 'black';
     ctx.strokeRect(50, 50, width * scaleFactor, height * scaleFactor);
 
-    // Draw porch dimensions
+    // Add dimensions and tags to the porch outline
     ctx.fillStyle = 'black';
     ctx.font = '12px Arial';
-    ctx.fillText(`Width: ${width} in`, 50 + (width * scaleFactor) / 2 - 30, 45);
+    ctx.fillText(`${width} in (U)`, 50 + (width * scaleFactor) / 2 - 30, 40); // Top horizontal line tag
+    ctx.fillText(`${width} in (sU)`, 50 + (width * scaleFactor) / 2 - 30, 60 + height * scaleFactor); // Bottom horizontal line tag
 
-    // Vertical dimension
+    // Vertical dimensions
     ctx.save();
-    ctx.translate(45, 50 + (height * scaleFactor) / 2);
+    ctx.translate(30, 50 + (height * scaleFactor) / 2);
     ctx.rotate(-Math.PI / 2);
-    ctx.fillText(`Height: ${height} in`, -30, 0);
+    ctx.fillText(`${height} in (U)`, -30, 0); // Left vertical line tag
+    ctx.restore();
+
+    ctx.save();
+    ctx.translate(70 + width * scaleFactor, 50 + (height * scaleFactor) / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillText(`${height} in (sU)`, -30, 0); // Right vertical line tag
     ctx.restore();
 
     // Maximum width for each section
     const maxSectionWidth = 48; // Maximum width for each section in inches
     const sectionCount = Math.ceil(width / maxSectionWidth); // Number of sections
     const sectionWidth = width / sectionCount; // Width of each section
-
-    // Draw vertical lines for sections and display window width
-    ctx.strokeStyle = 'blue';
-    for (let i = 0; i < sectionCount; i++) {
-        const x = 50 + (i * sectionWidth * scaleFactor);
-        ctx.beginPath();
-        ctx.moveTo(x, 50);
-        ctx.lineTo(x, 50 + height * scaleFactor);
-        ctx.stroke();
-
-        // Display window width vertically
-        ctx.save();
-        ctx.translate(x + (sectionWidth * scaleFactor) / 2, 50 + (height * scaleFactor) + 20);
-        ctx.fillText(`${sectionWidth.toFixed(2)} in`, -20, 0);
-        ctx.restore();
-    }
 
     // Draw the door if selected and at the specified position
     if (door === 'yes' && selectedDoorSize) {
@@ -185,6 +206,7 @@ function visualize() {
         // Adjust door positioning from the left edge of the porch
         const doorX = 50 + doorPosition * scaleFactor; // Positioning based on porch left edge
 
+        // Draw the door
         ctx.fillStyle = 'brown';
         ctx.fillRect(doorX, 50 + height * scaleFactor - doorHeight, doorWidth, doorHeight); // Draw door
 
@@ -197,12 +219,83 @@ function visualize() {
         ctx.fillText(`${doorHeightInches} in`, -30, 0); // Door height
         ctx.restore();
 
-        // Draw horizontal line at top of door
+        // Draw the horizontal line at the top of the door
         ctx.strokeStyle = 'green';
         ctx.beginPath();
         ctx.moveTo(50, 50 + height * scaleFactor - doorHeight); // Start from left side
         ctx.lineTo(50 + width * scaleFactor, 50 + height * scaleFactor - doorHeight); // End at right side
         ctx.stroke();
+
+        // Display the green line's dimension
+        ctx.fillText(`${width} in (Green)`, 50 + (width * scaleFactor) / 2 - 40, 50 + height * scaleFactor - doorHeight - 10);
+
+        // Extend the vertical lines of the door to the top porch line (keep red lines)
+        if (transomWidth === 'yes') {
+            ctx.strokeStyle = 'red';
+            ctx.beginPath();
+            ctx.moveTo(doorX, 50); // Extend left door line to the top
+            ctx.lineTo(doorX, 50 + height * scaleFactor - doorHeight);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(doorX + doorWidth, 50); // Extend right door line to the top
+            ctx.lineTo(doorX + doorWidth, 50 + height * scaleFactor - doorHeight);
+            ctx.stroke();
+
+            // Display the red lines' dimensions
+            ctx.fillText(`${doorHeightInches} in (Red)`, doorX - 20, 45);
+            ctx.fillText(`${doorHeightInches} in (Red)`, doorX + doorWidth - 20, 45);
+        }
+
+        // Dimension lines from the door to nearest vertical blue line
+        ctx.strokeStyle = 'blue';
+        let leftNearestLine = doorPosition; // Distance from left door edge
+        let rightNearestLine = width - (doorPosition + doorWidthInches); // Distance from right door edge
+
+        ctx.fillText(`${leftNearestLine.toFixed(2)} in`, doorX - leftNearestLine / 2 * scaleFactor, 50 + height * scaleFactor - 10);
+        ctx.fillText(`${rightNearestLine.toFixed(2)} in`, doorX + doorWidth + rightNearestLine / 2 * scaleFactor, 50 + height * scaleFactor - 10);
+    }
+
+    // Draw vertical lines for sections from the bottom up
+    ctx.strokeStyle = 'blue';
+    let hCounter = 1; // Counter for H channels
+    for (let i = 0; i < sectionCount; i++) {
+        const x = 50 + (i * sectionWidth * scaleFactor);
+        const isWithinDoorRange = x > (50 + doorPosition * scaleFactor) && x < (50 + doorPosition * scaleFactor + doorWidth);
+
+        // Skip drawing blue lines that pass through the door when transom matches door width
+        if (isWithinDoorRange && door === 'yes' && selectedDoorSize && transomWidth === 'yes') {
+            continue; // Skip drawing this blue line entirely
+        }
+
+        ctx.beginPath();
+
+        // Check if the blue line intersects the door area
+        if (isWithinDoorRange && door === 'yes' && selectedDoorSize) {
+            // Draw blue line only above the door
+            ctx.moveTo(x, 50); // Start drawing from the top of the porch
+            ctx.lineTo(x, 50 + height * scaleFactor - doorHeight); // Stop at the top of the door (green line)
+        } else if (transomWidth === 'yes' && width >= 100 && door === 'yes' && selectedDoorSize) {
+            // If transom condition is met, stop blue lines above the green line
+            ctx.moveTo(x, 50 + height * scaleFactor); // Start from bottom
+            ctx.lineTo(x, 50 + height * scaleFactor - doorHeight); // Stop at green line
+        } else {
+            // Draw blue lines normally from bottom to top if no intersection or conditions
+            ctx.moveTo(x, 50 + height * scaleFactor); // Start drawing from the bottom of the porch
+            ctx.lineTo(x, 50); // Extend blue lines to the top
+        }
+
+        ctx.stroke();
+
+        // Assign part tags and IDs to blue lines
+        const tag = i === sectionCount - 1 ? 'sH' : 'H';
+        const partId = `Part ID: ${tag}-${hCounter++}`;
+
+        // Display window width and part tags vertically
+        ctx.save();
+        ctx.translate(x + (sectionWidth * scaleFactor) / 2, 50 + (height * scaleFactor) + 20);
+        ctx.fillText(`${sectionWidth.toFixed(2)} in (${tag})`, -20, 0);
+        ctx.restore();
     }
 
     canvas.style.display = 'block'; // Ensure the canvas is visible
@@ -211,15 +304,22 @@ function visualize() {
 
 // Add event listeners to input fields for live updates
 document.getElementById('width').addEventListener('input', visualize);
-document.getElementById('height').addEventListener('input', visualize);
+document.getElementById('height').addEventListener('input', () => {
+    toggleDoorOptions();
+    visualize();
+});
 document.getElementById('door').addEventListener('change', toggleDoorOptions);
 document.getElementById('doorPosition').addEventListener('input', visualize);
 document.querySelectorAll('input[name="doorSize"]').forEach(radio => {
     radio.addEventListener('change', visualize);
 });
+document.getElementById('transomWidth').addEventListener('change', visualize);
 
 // Trigger initial visualization when the door selection is changed
 toggleDoorOptions();
+
+
+
 
 console.log("Width:", width);
 console.log("Height:", height);
@@ -230,8 +330,6 @@ if (selectedDoorSize) {
 }
 
 async function generateQuote() {
-    const { jsPDF } = window.jspdf;
-
     const width = parseFloat(document.getElementById('width').value) || 0;
     const height = parseFloat(document.getElementById('height').value) || 0;
     const door = document.getElementById('door').value;
@@ -239,117 +337,96 @@ async function generateQuote() {
     const selectedDoorSize = document.querySelector('input[name="doorSize"]:checked');
 
     // Create a new jsPDF instance
+    const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
+
+    // Set up colors
+    const headerColor = '#4A90E2'; // Blue color for headers
+    const textColor = '#333'; // Dark color for main text
+    const sectionBackgroundColor = '#F2F4F7'; // Light background for sections
+
+    // Add header with a background color
+    doc.setFillColor(headerColor);
+    doc.rect(0, 10, 210, 20, 'F'); // Full width header background
+    doc.setTextColor('#FFFFFF'); // White text for header
+    doc.setFontSize(20);
+    doc.text('PRICE QUOTE', 105, 25, { align: 'center' });
+
+    // Reset text color for the rest of the document
+    doc.setTextColor(textColor);
+
+    // Company Information Section
+    doc.setFillColor(sectionBackgroundColor);
+    doc.rect(10, 30, 90, 40, 'F'); // Background for company info section
+    doc.setFontSize(12);
+    doc.text('Prepared By:', 15, 40);
+    doc.text('Company Name', 15, 45);
+    doc.text('1234 Address St.', 15, 50);
+    doc.text('City, State, ZIP', 15, 55);
+    doc.text('Email: contact@company.com', 15, 60);
+    doc.text('Phone: (123) 456-7890', 15, 65);
+
+    // Quotation for section
+    doc.rect(110, 30, 90, 40, 'F'); // Background for client info section
+    doc.text('Quotation for:', 115, 40);
+    doc.text('Client Company', 115, 45);
+    doc.text('Client Address', 115, 50);
+    doc.text('City, State, ZIP', 115, 55);
+    doc.text('Email: client@example.com', 115, 60);
+    doc.text('Phone: (987) 654-3210', 115, 65);
 
     // Date and Quote Number
     const quoteDate = new Date().toLocaleDateString();
-    const quoteNumber = Math.floor(Math.random() * 1000000); // Random quote number for demonstration
-
-    // Header Section
-    doc.setFontSize(20);
-    doc.text('PRICE QUOTE', 105, 20, { align: 'center' });
-
-    // Company Information Section
+    const quoteNumber = 'Q-12345';
     doc.setFontSize(12);
-    doc.text('Prepared By:', 20, 35);
-    doc.text('Company Name', 20, 40);
-    doc.text('1234 Address St.', 20, 45);
-    doc.text('City, State, ZIP', 20, 50);
-    doc.text('Email: contact@company.com', 20, 55);
-    doc.text('Phone: (123) 456-7890', 20, 60);
+    doc.text(`Quote Date: ${quoteDate}`, 15, 75);
+    doc.text(`Quote Number: ${quoteNumber}`, 15, 80);
 
-    // Quotation for section
-    doc.text('Quotation for:', 120, 35);
-    doc.text('Client Company', 120, 40);
-    doc.text('Client Address', 120, 45);
-    doc.text('City, State, ZIP', 120, 50);
-    doc.text('Email: client@example.com', 120, 55);
-    doc.text('Phone: (987) 654-3210', 120, 60);
+    // Add table headers and details
+    const headers = ["Part ID", "Part Name", "Dimensions (inches)", "Quantity", "Price", "Total"];
+    const rows = [
+        ["U-1", "Top U-Channel", `${width}`, "1", "$10", "$10"],
+        ["U-2", "Left U-Channel", `${height}`, "1", "$10", "$10"],
+        ["sU-3", "Right sU-Channel", `${height}`, "1", "$10", "$10"],
+        ["sU-4", "Bottom sU-Channel", `${width}`, "1", "$10", "$10"],
+        // Add entries for other parts like blue lines (H channels), red lines, etc.
+    ];
 
-    // Date and Quote Number
-    doc.text(`Quote Date: ${quoteDate}`, 20, 70);
-    doc.text(`Quote Number: ${quoteNumber}`, 20, 75);
-
-    // Table headers
-    const headers = [["Part ID", "Part Name", "Length (in)", "Qty", "Price per Unit", "Total Price"]];
-    const rows = [];
-
-    // Initialize part ID counter
-    let partID = 1;
-
-    // Horizontal U-Channel
-    const horizontalChannelLength = 2 * width; // Top and bottom channels
-    const horizontalChannelPricePerUnit = 5; // Example price per unit length
-    const horizontalChannelTotalPrice = horizontalChannelLength * horizontalChannelPricePerUnit;
-    rows.push([`P${partID++}`, "Horizontal U-Channel", `${horizontalChannelLength}`, "1", `$${horizontalChannelPricePerUnit.toFixed(2)}`, `$${horizontalChannelTotalPrice.toFixed(2)}`]);
-
-    // Vertical U-Channel
-    const verticalChannelLength = 2 * height; // Left and right channels
-    const verticalChannelPricePerUnit = 5; // Example price per unit length
-    const verticalChannelTotalPrice = verticalChannelLength * verticalChannelPricePerUnit;
-    rows.push([`P${partID++}`, "Vertical U-Channel", `${verticalChannelLength}`, "1", `$${verticalChannelPricePerUnit.toFixed(2)}`, `$${verticalChannelTotalPrice.toFixed(2)}`]);
-
-    // Horizontal H-Channel
-    const horizontalHChannelLength = 2 * (width - 4); // Inner top and bottom channels
-    const horizontalHChannelPricePerUnit = 4; // Example price per unit length
-    const horizontalHChannelTotalPrice = horizontalHChannelLength * horizontalHChannelPricePerUnit;
-    rows.push([`P${partID++}`, "Horizontal H-Channel", `${horizontalHChannelLength}`, "1", `$${horizontalHChannelPricePerUnit.toFixed(2)}`, `$${horizontalHChannelTotalPrice.toFixed(2)}`]);
-
-    // Vertical H-Channel
-    const verticalHChannelLength = 2 * (height - 4); // Inner left and right channels
-    const verticalHChannelPricePerUnit = 4; // Example price per unit length
-    const verticalHChannelTotalPrice = verticalHChannelLength * verticalHChannelPricePerUnit;
-    rows.push([`P${partID++}`, "Vertical H-Channel", `${verticalHChannelLength}`, "1", `$${verticalHChannelPricePerUnit.toFixed(2)}`, `$${verticalHChannelTotalPrice.toFixed(2)}`]);
-
-    // Door Information
-    if (door === 'yes' && selectedDoorSize) {
-        const [doorHeightInches, doorWidthInches] = selectedDoorSize.value.split('x').map(Number);
-        const doorPricePerUnit = 100; // Example price for the door
-        const doorTotalPrice = doorPricePerUnit * 1; // Assuming quantity 1
-        rows.push([`P${partID++}`, "Door", `${doorWidthInches} x ${doorHeightInches}`, "1", `$${doorPricePerUnit.toFixed(2)}`, `$${doorTotalPrice.toFixed(2)}`]);
-    }
-
-    // Calculate the subtotal
+    // Add pricing calculations, subtotal, taxes, etc.
     const subtotal = rows.reduce((acc, row) => acc + parseFloat(row[5].replace('$', '')), 0);
-    const taxRate = 0.13; // 13% HST
-    const taxAmount = subtotal * taxRate;
-    const total = subtotal + taxAmount;
+    const tax = subtotal * 0.13; // Assuming 13% HST
+    const total = subtotal + tax;
 
-    // Add subtotal, tax, and total rows
-    rows.push(["", "", "", "", "Subtotal", `$${subtotal.toFixed(2)}`]);
-    rows.push(["", "", "", "", "HST (13%)", `$${taxAmount.toFixed(2)}`]);
-    rows.push(["", "", "", "", "Total", `$${total.toFixed(2)}`]);
+    rows.push(["", "Subtotal", "", "", "", `$${subtotal.toFixed(2)}`]);
+    rows.push(["", "HST (13%)", "", "", "", `$${tax.toFixed(2)}`]);
+    rows.push(["", "Total", "", "", "", `$${total.toFixed(2)}`]);
 
     // Create a table in the PDF
     doc.autoTable({
-        head: headers,
+        head: [headers],
         body: rows,
         startY: 90,
         theme: 'grid',
-        styles: {
-            fontSize: 10,
-            halign: 'center',
-        },
-        columnStyles: {
-            0: { halign: 'left' },
-            1: { halign: 'left' },
-        },
+        styles: { fillColor: [242, 244, 247], textColor: textColor },
+        headStyles: { fillColor: headerColor, textColor: '#FFFFFF' },
     });
 
-    // Terms and Conditions
-    doc.setFontSize(10);
-    doc.text('This Quote is Subject to The Following Terms And Conditions: Delivery Will Be Made [DESCRIBE DELIVERY]', 20, doc.lastAutoTable.finalY + 10);
-    doc.text('General Terms And Conditions Governing This Quotation/Contract Are Provided At [DESCRIBE GENERAL TERMS AND CONDITIONS]', 20, doc.lastAutoTable.finalY + 15);
-    doc.text('This Quotation Has Been Approved By [COMPANY] As Evidenced By The Signature Of Its Authorized Representative Below.', 20, doc.lastAutoTable.finalY + 20);
-
-    // Add scaled visualization at the bottom
+    // Add canvas visualization
     const canvas = document.getElementById('visualization');
     const imgData = await html2canvas(canvas).then(canvas => canvas.toDataURL('image/png'));
-    const imgWidth = 80;
-    const imgHeight = (canvas.height / canvas.width) * imgWidth;
-    doc.addImage(imgData, 'PNG', 20, doc.internal.pageSize.height - imgHeight - 30, imgWidth, imgHeight);
+
+    // Determine the size and position to center the image
+    const imgWidth = 160; // Increase width slightly for better visibility
+    const imgHeight = (canvas.height / canvas.width) * imgWidth; // Keep aspect ratio
+    const imgX = (doc.internal.pageSize.width - imgWidth) / 2; // Center horizontally
+    const imgY = doc.lastAutoTable.finalY + 10; // Position below the table
+
+    // Add the visualization image to the PDF
+    doc.addImage(imgData, 'PNG', imgX, imgY, imgWidth, imgHeight);
 
     // Save the PDF
     doc.save('porch_quote.pdf');
 }
 
+
+ 

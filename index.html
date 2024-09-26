@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Porch Visualization Tool</title>
     <link rel="stylesheet" href="styles.css">
-    
-    
 </head>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -14,8 +12,13 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.13/jspdf.plugin.autotable.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
-
 <body>
+    <!-- Header Section -->
+    <header class="header">
+        <h1>York Aluminum</h1>
+        <button class="home-button" onclick="location.reload();">Home</button>
+    </header>
+
     <div class="container">
         <h1>Porch Visualization Tool</h1>
 
@@ -24,32 +27,55 @@
 
         <div class="question" id="layoutSelection">
             <label>Select a layout:</label><br>
-        
+
             <input type="radio" id="layoutA" name="layout" value="layoutA" onclick="selectLayout('layoutA')">
             <label for="layoutA">A</label>
             <img src="images/layoutA.png" alt="Layout A" width="150" height="150" style="border:1px solid black;">
-        
+
             <input type="radio" id="layoutB" name="layout" value="layoutB" onclick="selectLayout('layoutB')">
             <label for="layoutB">B</label>
             <img src="images/layoutB.png" alt="Layout B" width="150" height="150" style="border:1px solid black;">
-        
+
             <input type="radio" id="layoutC" name="layout" value="layoutC" onclick="selectLayout('layoutC')">
             <label for="layoutC">C</label>
             <img src="images/layoutC.png" alt="Layout C" width="150" height="150" style="border:1px solid black;">
-        
+
             <input type="radio" id="layoutD" name="layout" value="layoutD" onclick="selectLayout('layoutD')">
             <label for="layoutD">D</label>
             <img src="images/layoutD.png" alt="Layout D" width="150" height="150" style="border:1px solid black;"><br>
-        
+
             <input type="radio" id="layoutNone" name="layout" value="none" onclick="selectLayout('none')">
             <label for="layoutNone">None of the above</label>
         </div>
-        
-        
+
+       <!-- Contact Form and Message when 'None of the above' is selected -->
+       <div id="contactSection" style="display: none; margin-top: 20px;">
+        <p>Please contact the sales person for further assistance.</p>
+        <p>Contact us at: (123) 456-7890 or email@example.com</p>
+        <form id="contactForm" class="contact-form">
+            <div class="form-group">
+                <label for="name">Name:</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+
+            <div class="form-group">
+                <label for="message">Message:</label>
+                <textarea id="message" name="message" rows="4" required></textarea>
+            </div>
+
+            <button type="submit" class="button">Submit</button>
+        </form>
+        </div>
+
 
         <!-- Button to reset layout selection -->
         <button id="resetSelectionButton" onclick="resetSelection()" style="display: none;">Change Selection</button>
-        
+
         <!-- Input Questions -->
         <div id="questions">
             <div class="question">
@@ -89,19 +115,21 @@
                 <label for="doorSize80x36">80x36 inches</label><br>
             </div>
 
-            <!-- Submit button to trigger visualization -->
-            <!-- <button onclick="showDoorPosition()">Next</button> -->
+            <!-- Transom Width Question -->
+            <div class="question" id="transomWidthContainer" style="display:none;">
+                <label for="transomWidth">Do you want the width of the transom to be the width of the door?</label>
+                <select id="transomWidth">
+                    <option value="no">No</option>
+                    <option value="yes">Yes</option>
+                </select>
+            </div>
         </div>
 
+        <!-- Generate Quote Button -->
+        <button class="button" id="generateQuoteButton" onclick="generateQuote()">Generate Quote</button>
+
         <!-- Canvas for visualization -->
-        <!-- <button class="button" onclick="visualize()">Visualize</button>  -->
-        <button class="button" onclick="generateQuote()">Generate Quote</button>
-       
-
-
-
         <canvas id="visualization" width="1000" height="800" style="border:1px solid black; display:none;"></canvas>
-        
     </div>
 
     <script src="script.js"></script>
