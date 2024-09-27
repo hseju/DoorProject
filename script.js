@@ -2,7 +2,9 @@
 function toggleDoorOptions() {
     const door = document.getElementById('door').value;
     const doorPositionContainer = document.getElementById('doorPositionContainer');
-    const doorSizeContainer = document.getElementById('doorSizeContainer');
+    const stormDoorTypeContainer = document.getElementById('stormDoorTypeContainer');
+    const doorWidthContainer = document.getElementById('doorWidthContainer');
+    const doorHeightContainer = document.getElementById('doorHeightContainer');
     const height = parseFloat(document.getElementById('height').value) || 0;
     const doorHeightError = document.getElementById('doorHeightError');
 
@@ -18,27 +20,60 @@ function toggleDoorOptions() {
             // Reset the door selection to "No" if the height is insufficient
             document.getElementById('door').value = 'no';
             doorPositionContainer.style.display = 'none';
-            doorSizeContainer.style.display = 'none';
+            stormDoorTypeContainer.style.display = 'none'; // Hide storm door type selection
+            doorWidthContainer.style.display = 'none';
+            doorHeightContainer.style.display = 'none';
             return;
         }
         // Show the door options if the height is valid
         doorPositionContainer.style.display = 'block';
-        doorSizeContainer.style.display = 'block';
-
+        stormDoorTypeContainer.style.display = 'block'; // Show the storm door type selection
 
         // Show the transom width question if the height is greater than 80 inches
         if (height > 80) {
             transomWidthContainer.style.display = 'block';
         }
-
-
     } else {
         doorPositionContainer.style.display = 'none';
-        doorSizeContainer.style.display = 'none';
+        stormDoorTypeContainer.style.display = 'none'; // Hide storm door type selection
+        doorWidthContainer.style.display = 'none';
+        doorHeightContainer.style.display = 'none';
     }
 
     // Trigger visualization whenever door options are toggled
     visualize();
+}
+
+// Function to display door dimensions (width and height) dropdowns after storm door type is selected
+function showDoorDimensions() {
+    const doorWidthContainer = document.getElementById('doorWidthContainer');
+    const doorHeightContainer = document.getElementById('doorHeightContainer');
+
+    // Show the door width and height selection containers
+    doorWidthContainer.style.display = 'block';
+    doorHeightContainer.style.display = 'block';
+
+    // Populate door width options (30 to 36 inches in 1/2 inch increments)
+    const doorWidthSelect = document.getElementById('doorWidth');
+    doorWidthSelect.innerHTML = ''; // Clear existing options
+    for (let width = 30; width <= 36; width += 0.5) {
+        const option = document.createElement('option');
+        option.value = width.toFixed(1);
+        option.text = `${width.toFixed(1)} inches`;
+        doorWidthSelect.appendChild(option);
+    }
+    doorWidthSelect.selectedIndex = 0; // Select the first option by default
+
+    // Populate door height options (66 to 88 inches in 1/2 inch increments)
+    const doorHeightSelect = document.getElementById('doorHeight');
+    doorHeightSelect.innerHTML = ''; // Clear existing options
+    for (let height = 66; height <= 88; height += 0.5) {
+        const option = document.createElement('option');
+        option.value = height.toFixed(1);
+        option.text = `${height.toFixed(1)} inches`;
+        doorHeightSelect.appendChild(option);
+    }
+    doorHeightSelect.selectedIndex = 0; // Select the first option by default
 }
 
 // Add event listener to the height input field to revalidate when the height changes
@@ -48,6 +83,7 @@ document.getElementById('height').addEventListener('input', () => {
         toggleDoorOptions();
     }
 });
+
 
 
 
@@ -143,15 +179,14 @@ function visualize() {
     const height = parseFloat(document.getElementById('height').value) || 0;
     const door = document.getElementById('door').value;
     const doorPosition = parseFloat(document.getElementById('doorPosition').value) || 0;
-    const selectedDoorSize = document.querySelector('input[name="doorSize"]:checked');
+    const selectedDoorWidth = parseFloat(document.getElementById('doorWidth').value) || 0;
+    const selectedDoorHeight = parseFloat(document.getElementById('doorHeight').value) || 0;
     const transomWidth = document.getElementById('transomWidth') ? document.getElementById('transomWidth').value : 'no';
 
     if (!width || !height) {
         // Do not draw if width or height is not valid
         return;
     }
-
-    let doorWidth = 0, doorHeight = 0;
 
     // Get the canvas and its context
     const canvas = document.getElementById('visualization');
@@ -169,138 +204,130 @@ function visualize() {
     const scaleY = fixedCanvasHeight / height;
     const scaleFactor = Math.min(scaleX, scaleY); // Maintain aspect ratio
 
-    // Draw the porch outline with tags
+    // Draw the porch outline
     ctx.strokeStyle = 'black';
     ctx.strokeRect(50, 50, width * scaleFactor, height * scaleFactor);
 
-    // Add dimensions and tags to the porch outline
+    // Draw porch dimensions
     ctx.fillStyle = 'black';
     ctx.font = '12px Arial';
-    ctx.fillText(`${width} in (U)`, 50 + (width * scaleFactor) / 2 - 30, 40); // Top horizontal line tag
-    ctx.fillText(`${width} in (sU)`, 50 + (width * scaleFactor) / 2 - 30, 60 + height * scaleFactor); // Bottom horizontal line tag
-
-    // Vertical dimensions
+    ctx.fillText(`${width} in`, 50 + (width * scaleFactor) / 2 - 30, 40);
     ctx.save();
     ctx.translate(30, 50 + (height * scaleFactor) / 2);
     ctx.rotate(-Math.PI / 2);
-    ctx.fillText(`${height} in (U)`, -30, 0); // Left vertical line tag
+    ctx.fillText(`${height} in`, -30, 0);
     ctx.restore();
 
-    ctx.save();
-    ctx.translate(70 + width * scaleFactor, 50 + (height * scaleFactor) / 2);
-    ctx.rotate(-Math.PI / 2);
-    ctx.fillText(`${height} in (sU)`, -30, 0); // Right vertical line tag
-    ctx.restore();
-
-    // Maximum width for each section
-    const maxSectionWidth = 48; // Maximum width for each section in inches
-    const sectionCount = Math.ceil(width / maxSectionWidth); // Number of sections
-    const sectionWidth = width / sectionCount; // Width of each section
+    let doorX = 0;
+    let doorWidth = 0;
+    let doorHeight = 0;
 
     // Draw the door if selected and at the specified position
-    if (door === 'yes' && selectedDoorSize) {
-        const [doorHeightInches, doorWidthInches] = selectedDoorSize.value.split('x').map(Number);
-        doorWidth = doorWidthInches * scaleFactor;
-        doorHeight = doorHeightInches * scaleFactor;
-
-        // Adjust door positioning from the left edge of the porch
-        const doorX = 50 + doorPosition * scaleFactor; // Positioning based on porch left edge
+    if (door === 'yes') {
+        doorWidth = selectedDoorWidth * scaleFactor;
+        doorHeight = selectedDoorHeight * scaleFactor;
+        doorX = 50 + doorPosition * scaleFactor; // Door position from the left
 
         // Draw the door
         ctx.fillStyle = 'brown';
-        ctx.fillRect(doorX, 50 + height * scaleFactor - doorHeight, doorWidth, doorHeight); // Draw door
+        ctx.fillRect(doorX, 50 + height * scaleFactor - doorHeight, doorWidth, doorHeight);
 
         // Draw door dimensions
         ctx.fillStyle = 'black';
-        ctx.fillText(`${doorWidthInches} in`, doorX + doorWidth / 2 - 15, 50 + height * scaleFactor + 20); // Door width
+        ctx.fillText(`${selectedDoorWidth} in`, doorX + doorWidth / 2 - 15, 50 + height * scaleFactor + 20);
         ctx.save();
         ctx.translate(doorX - 10, 50 + (height * scaleFactor) - doorHeight / 2);
         ctx.rotate(-Math.PI / 2);
-        ctx.fillText(`${doorHeightInches} in`, -30, 0); // Door height
+        ctx.fillText(`${selectedDoorHeight} in`, -30, 0);
         ctx.restore();
 
         // Draw the horizontal line at the top of the door
         ctx.strokeStyle = 'green';
         ctx.beginPath();
-        ctx.moveTo(50, 50 + height * scaleFactor - doorHeight); // Start from left side
-        ctx.lineTo(50 + width * scaleFactor, 50 + height * scaleFactor - doorHeight); // End at right side
+        ctx.moveTo(50, 50 + height * scaleFactor - doorHeight);
+        ctx.lineTo(50 + width * scaleFactor, 50 + height * scaleFactor - doorHeight);
         ctx.stroke();
-
-        // Display the green line's dimension
-        ctx.fillText(`${width} in (Green)`, 50 + (width * scaleFactor) / 2 - 40, 50 + height * scaleFactor - doorHeight - 10);
-
-        // Extend the vertical lines of the door to the top porch line (keep red lines)
-        if (transomWidth === 'yes') {
-            ctx.strokeStyle = 'red';
-            ctx.beginPath();
-            ctx.moveTo(doorX, 50); // Extend left door line to the top
-            ctx.lineTo(doorX, 50 + height * scaleFactor - doorHeight);
-            ctx.stroke();
-
-            ctx.beginPath();
-            ctx.moveTo(doorX + doorWidth, 50); // Extend right door line to the top
-            ctx.lineTo(doorX + doorWidth, 50 + height * scaleFactor - doorHeight);
-            ctx.stroke();
-
-            // Display the red lines' dimensions
-            ctx.fillText(`${doorHeightInches} in (Red)`, doorX - 20, 45);
-            ctx.fillText(`${doorHeightInches} in (Red)`, doorX + doorWidth - 20, 45);
-        }
-
-        // Dimension lines from the door to nearest vertical blue line
-        ctx.strokeStyle = 'blue';
-        let leftNearestLine = doorPosition; // Distance from left door edge
-        let rightNearestLine = width - (doorPosition + doorWidthInches); // Distance from right door edge
-
-        ctx.fillText(`${leftNearestLine.toFixed(2)} in`, doorX - leftNearestLine / 2 * scaleFactor, 50 + height * scaleFactor - 10);
-        ctx.fillText(`${rightNearestLine.toFixed(2)} in`, doorX + doorWidth + rightNearestLine / 2 * scaleFactor, 50 + height * scaleFactor - 10);
     }
 
-    // Draw vertical lines for sections from the bottom up
-    ctx.strokeStyle = 'blue';
-    let hCounter = 1; // Counter for H channels
-    for (let i = 0; i < sectionCount; i++) {
-        const x = 50 + (i * sectionWidth * scaleFactor);
-        const isWithinDoorRange = x > (50 + doorPosition * scaleFactor) && x < (50 + doorPosition * scaleFactor + doorWidth);
+    // Logic to draw blue lines (window sections) for the entire porch initially
+    if (door === 'no') {
+        const sectionCount = Math.ceil(width / 48); // Divide the porch into sections of max 48 inches
+        const sectionWidth = width / sectionCount;
 
-        // Skip drawing blue lines that pass through the door when transom matches door width
-        if (isWithinDoorRange && door === 'yes' && selectedDoorSize && transomWidth === 'yes') {
-            continue; // Skip drawing this blue line entirely
+        for (let i = 0; i < sectionCount; i++) {
+            const x = 50 + (i * sectionWidth * scaleFactor);
+            ctx.strokeStyle = 'blue';
+            ctx.beginPath();
+            ctx.moveTo(x, 50 + height * scaleFactor); // Start from the bottom of the porch
+            ctx.lineTo(x, 50); // Draw to the top of the porch
+            ctx.stroke();
+
+            // Display section dimensions
+            ctx.save();
+            ctx.translate(x + (sectionWidth * scaleFactor) / 2, 50 + (height * scaleFactor) + 20);
+            ctx.fillText(`${sectionWidth.toFixed(2)} in`, -20, 0);
+            ctx.restore();
+        }
+    } else {
+        // Logic to draw blue lines (window sections) on the left side of the door
+        const leftAreaWidth = doorPosition;
+        const leftSectionCount = Math.ceil(leftAreaWidth / 48); // Divide left area into sections of max 48 inches
+        const leftSectionWidth = leftAreaWidth / leftSectionCount;
+
+        for (let i = 0; i < leftSectionCount; i++) {
+            const x = 50 + (i * leftSectionWidth * scaleFactor);
+            ctx.strokeStyle = 'blue';
+            ctx.beginPath();
+            ctx.moveTo(x, 50 + height * scaleFactor); // Start from the bottom of the porch
+            ctx.lineTo(x, 50); // Draw to the top of the porch
+            ctx.stroke();
+
+            // Display section dimensions
+            ctx.save();
+            ctx.translate(x + (leftSectionWidth * scaleFactor) / 2, 50 + (height * scaleFactor) + 20);
+            ctx.fillText(`${leftSectionWidth.toFixed(2)} in`, -20, 0);
+            ctx.restore();
         }
 
+        // Logic to draw blue lines (window sections) on the right side of the door
+        const rightAreaStart = doorX + doorWidth;
+        const rightAreaWidth = width - (doorPosition + selectedDoorWidth);
+        const rightSectionCount = Math.ceil(rightAreaWidth / 48); // Divide right area into sections of max 48 inches
+        const rightSectionWidth = rightAreaWidth / rightSectionCount;
+
+        for (let i = 0; i < rightSectionCount; i++) {
+            const x = rightAreaStart + (i * rightSectionWidth * scaleFactor);
+            ctx.strokeStyle = 'blue';
+            ctx.beginPath();
+            ctx.moveTo(x, 50 + height * scaleFactor); // Start from the bottom of the porch
+            ctx.lineTo(x, 50); // Draw to the top of the porch
+            ctx.stroke();
+
+            // Display section dimensions
+            ctx.save();
+            ctx.translate(x + (rightSectionWidth * scaleFactor) / 2, 50 + (height * scaleFactor) + 20);
+            ctx.fillText(`${rightSectionWidth.toFixed(2)} in`, -20, 0);
+            ctx.restore();
+        }
+    }
+
+    // Handle the transom logic
+    if (transomWidth === 'yes' && width >= 100 && door === 'yes') {
+        // Ensure blue lines do not extend above the green line
+        ctx.strokeStyle = 'red';
         ctx.beginPath();
-
-        // Check if the blue line intersects the door area
-        if (isWithinDoorRange && door === 'yes' && selectedDoorSize) {
-            // Draw blue line only above the door
-            ctx.moveTo(x, 50); // Start drawing from the top of the porch
-            ctx.lineTo(x, 50 + height * scaleFactor - doorHeight); // Stop at the top of the door (green line)
-        } else if (transomWidth === 'yes' && width >= 100 && door === 'yes' && selectedDoorSize) {
-            // If transom condition is met, stop blue lines above the green line
-            ctx.moveTo(x, 50 + height * scaleFactor); // Start from bottom
-            ctx.lineTo(x, 50 + height * scaleFactor - doorHeight); // Stop at green line
-        } else {
-            // Draw blue lines normally from bottom to top if no intersection or conditions
-            ctx.moveTo(x, 50 + height * scaleFactor); // Start drawing from the bottom of the porch
-            ctx.lineTo(x, 50); // Extend blue lines to the top
-        }
-
+        ctx.moveTo(doorX, 50);
+        ctx.lineTo(doorX, 50 + height * scaleFactor - doorHeight);
         ctx.stroke();
 
-        // Assign part tags and IDs to blue lines
-        const tag = i === sectionCount - 1 ? 'sH' : 'H';
-        const partId = `Part ID: ${tag}-${hCounter++}`;
-
-        // Display window width and part tags vertically
-        ctx.save();
-        ctx.translate(x + (sectionWidth * scaleFactor) / 2, 50 + (height * scaleFactor) + 20);
-        ctx.fillText(`${sectionWidth.toFixed(2)} in (${tag})`, -20, 0);
-        ctx.restore();
+        ctx.beginPath();
+        ctx.moveTo(doorX + doorWidth, 50);
+        ctx.lineTo(doorX + doorWidth, 50 + height * scaleFactor - doorHeight);
+        ctx.stroke();
     }
 
     canvas.style.display = 'block'; // Ensure the canvas is visible
 }
-
 
 // Add event listeners to input fields for live updates
 document.getElementById('width').addEventListener('input', visualize);
@@ -310,9 +337,8 @@ document.getElementById('height').addEventListener('input', () => {
 });
 document.getElementById('door').addEventListener('change', toggleDoorOptions);
 document.getElementById('doorPosition').addEventListener('input', visualize);
-document.querySelectorAll('input[name="doorSize"]').forEach(radio => {
-    radio.addEventListener('change', visualize);
-});
+document.getElementById('doorWidth').addEventListener('change', visualize);
+document.getElementById('doorHeight').addEventListener('change', visualize);
 document.getElementById('transomWidth').addEventListener('change', visualize);
 
 // Trigger initial visualization when the door selection is changed
